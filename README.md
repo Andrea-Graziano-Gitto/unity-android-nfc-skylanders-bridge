@@ -78,8 +78,13 @@ unity-android-nfc-skylanders-bridge/
 ### 1️⃣ Dolphin Emulator Setup (PC)
 1. Open **Dolphin Emulator** (tested on modern builds such as 2606a).
 2. Start your Skylanders game (e.g., *Skylanders: Spyro's Adventure*, *Giants*, *Swap Force*, *Trap Team*).
-3. In Dolphin's menu bar, open **Tools > Skylander Management** (*"Strumenti > Gestione Skylander"* in Italian).
-4. For each Skylander you own, create/save its `.sky` dump file to a folder on your PC (e.g. `C:\Users\<YourUser>\Documents\Dolphin Emulator\Skylanders\`).
+3. **Display Mode Recommendation**: Set Dolphin to run in **Windowed Full Size (Maximized Window)** rather than Exclusive Fullscreen. This ensures keyboard macros and instant window switching/focus restoration run seamlessly without video mode disruption.
+4. Open the Emulated Portal window from Dolphin's top menu: **Tools > Skylander Management** (*"Strumenti > Gestione Skylander"* in Italian).
+5. For each Skylander you own, create/save its `.sky` dump file to a folder on your PC (e.g. `C:\Users\<YourUser>\Documents\Dolphin Emulator\Skylanders\`).
+6. ⚠️ **Critical State 0 Calibration (Focus Setup)**:
+   - In the "Gestione Skylander" window, click once on the **"Carica file" (Load file)** button on Slot 1.
+   - When the file picker dialog opens, close or cancel it.
+   - *Why?* This leaves the "Carica file" button highlighted as the active/focused GUI element (State 0), allowing the Python automation macro (`space` / `arrow keys`) to trigger reliably. Keep the "Gestione Skylander" window open in the background!
 
 > [!NOTE]
 > `Sostitutore.py` automatically detects both Italian (`"Gestione Skylander"`) and English (`"Skylander Management"`) window titles.
@@ -164,12 +169,16 @@ function gestisciInvioForm(e) {
 
 ## 🕹️ In-Game Routine (10 Seconds Setup)
 
-1. Launch Dolphin and boot your Skylanders game.
-2. Open the **Skylander Management** window.
-3. Start `python Python/lettore.py`.
-4. Open the Android app and tap **Start Reading**.
-5. **Place a Skylander on the back of your phone**: it will instantly appear in the game!
-6. **Remove the figure**: the app detects the absence and clears the portal slot automatically!
+1. Launch Dolphin and boot your Skylanders game (in **Windowed Full Size / Maximized Window**).
+2. Open the **Skylander Management** window (*Strumenti > Gestione Skylander*).
+3. **Calibrate State 0**: Click *"Carica file"* (Load file) once, then close/cancel the file dialog (leaves button focused).
+4. Run the Python bridge:
+   ```bash
+   python Python/lettore.py
+   ```
+5. Open the Android app and tap **Start Reading**.
+6. **Place a Skylander on the back of your phone**: it will instantly appear in-game!
+7. **Remove the figure**: the app detects the absence and clears the portal slot automatically!
 
 ---
 
