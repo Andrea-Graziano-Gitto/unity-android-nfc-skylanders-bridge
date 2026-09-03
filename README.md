@@ -93,10 +93,10 @@ flowchart TD
         F --> H[currentTech.Call 'close']
     end
 
-    subgraph Decision ["3. Temporal Window Decision (N=10 Samples)"]
-        I[Evaluate Bitmask: e.g. '0000011111']
+    subgraph Decision ["3. Temporal Window Decision (N=5 Samples / 0.5s Cycle)"]
+        I[Evaluate Bitmask: e.g. '00111' or '11111']
         I -->|Any '1' Present - Temporal OR| J[Authoritative State: Tag Present -> Send UID]
-        I -->|All '0's - '0000000000'| K[Authoritative State: Tag Removed -> Send 'Nessuno']
+        I -->|All '0's - '00000'| K[Authoritative State: Tag Removed -> Send 'Nessuno']
     end
 
     Discovery --> Verification --> Decision
@@ -117,18 +117,20 @@ if (connected) {
 ```
 If the figure is lifted even a few millimeters off the phone's coil, `connect()` throws an exception, drops the connection, and sets `currentTag = null`.
 
-### ⏱️ 2. Temporal Window Sampling & Debounce Filter
-To eliminate micro-stutters and radio-frequency noise from false-clearing the portal in-game, reads are aggregated into a temporal bitmask window ($N = 10$ samples at $\Delta t = 0.1\text{s}$):
-$$\text{Window Duration} = 10 \times 0.1\text{s} = 1.0\text{s}$$
+### ⏱️ 2. Temporal Window Sampling & Debounce Filter (Synchronized 0.5s Rate)
+To make character spawning lightning-fast while filtering out RF noise, reads are aggregated into a compact temporal bitmask window ($N = 5$ samples at $\Delta t = 0.1\text{s}$):
+$$\text{Window Duration} = 5 \times 0.1\text{s} = 0.5\text{s}$$
+
+This precisely synchronizes the mobile app's update cycle with the Python listener's **0.5-second polling loop**:
 
 ```text
-Time (s):    0.0 ──── 0.2 ──── 0.4 ──── 0.6 ──── 0.8 ──── 1.0s
-Samples:     [ 0 , 0 , 0 , 0 , 0 , 1 , 1 , 1 , 1 , 1 ]  -> Valid Presence (Spawns Character)
-Samples:     [ 1 , 1 , 0 , 1 , 1 , 1 , 1 , 0 , 1 , 1 ]  -> RF Noise Handled (No In-Game Flicker)
-Samples:     [ 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ]  -> True Absence (Despawns Character)
+Time (s):    0.0 ──── 0.1 ──── 0.2 ──── 0.3 ──── 0.4 ──── 0.5s
+Samples:     [ 0 ,   0 ,   1 ,   1 ,   1 ]  -> Valid Presence (Spawns Character in 0.5s)
+Samples:     [ 1 ,   1 ,   0 ,   1 ,   1 ]  -> RF Noise Filtered (No In-Game Flicker)
+Samples:     [ 0 ,   0 ,   0 ,   0 ,   0 ]  -> True Absence (Despawns Character in 0.5s)
 ```
 - **Temporal OR Logic**: A strict zero check (`tuttiZero == true`) acts as a noise-resistant temporal OR filter. Single-packet RF dropouts do not cause annoying in-game character despawns.
-- **Batched Cloud Updates**: HTTP requests are only dispatched at the end of each $1.0\text{s}$ cycle when an authoritative state change is confirmed.
+- **Synchronized Cloud Updates**: HTTP requests are only dispatched at the end of each $0.5\text{s}$ cycle, matching Python's polling frequency with optimal efficiency and zero lag.
 
 ### 🛡️ 3. Intent Sanitization & Android Lifecycle
 When a new tag arrives via `ForegroundDispatch`, the script binds the active `AndroidJavaObject` and immediately wipes the native Activity's intent:
