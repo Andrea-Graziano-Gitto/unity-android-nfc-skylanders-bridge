@@ -42,9 +42,13 @@ Why route through Google Forms/Sheets instead of a local HTTP/WebSocket server?
 
 ## 📸 Screenshots
 
-| Android App UI | Dolphin Skylander Manager | Google Apps Script Setup |
+| Android App (Start) | Android App (Active Reading) | Dolphin Skylander Manager |
 | :---: | :---: | :---: |
-| ![App UI](docs/screenshots/app_ui.png) | ![Dolphin Manager](docs/screenshots/dolphin_skylander_manager.png) | ![Google Script](docs/screenshots/google_sheet_script.png) |
+| <img src="docs/screenshots/app_ui_start.png" width="220" /> | <img src="docs/screenshots/app_ui_stop.png" width="220" /> | <img src="docs/screenshots/dolphin_skylander_manager.png" width="380" /> |
+
+| Google Apps Script Editor | Trigger Configuration (On Form Submit) |
+| :---: | :---: |
+| <img src="docs/screenshots/google_apps_script_editor.png" width="380" /> | <img src="docs/screenshots/google_apps_script_trigger.png" width="380" /> |
 
 ---
 
@@ -82,9 +86,13 @@ unity-android-nfc-skylanders-bridge/
 4. Open the Emulated Portal window from Dolphin's top menu: **Tools > Skylander Management** (*"Strumenti > Gestione Skylander"* in Italian).
 5. For each Skylander you own, create/save its `.sky` dump file to a folder on your PC (e.g. `C:\Users\<YourUser>\Documents\Dolphin Emulator\Skylanders\`).
 6. ⚠️ **Critical State 0 Calibration (Focus Setup)**:
-   - In the "Gestione Skylander" window, click once on the **"Carica file" (Load file)** button on Slot 1.
+   - In the "Gestione Skylander" window, click once on the **"Carica file" (Load file)** button on Slot 1 (marked with the red arrow below).
    - When the file picker dialog opens, close or cancel it.
    - *Why?* This leaves the "Carica file" button highlighted as the active/focused GUI element (State 0), allowing the Python automation macro (`space` / `arrow keys`) to trigger reliably. Keep the "Gestione Skylander" window open in the background!
+
+<p align="center">
+  <img src="docs/screenshots/dolphin_skylander_manager.png" width="600" alt="Dolphin Skylander Manager" />
+</p>
 
 > [!NOTE]
 > `Sostitutore.py` automatically detects both Italian (`"Gestione Skylander"`) and English (`"Skylander Management"`) window titles.
@@ -120,11 +128,20 @@ function gestisciInvioForm(e) {
 }
 ```
 
-4. Click the clock icon on the left toolbar (**Triggers**) > **Add Trigger**:
-   - Function: `gestisciInvioForm`
-   - Event source: `From spreadsheet`
-   - Event type: `On form submit`
-   - Save and accept permissions.
+<p align="center">
+  <img src="docs/screenshots/google_apps_script_editor.png" width="650" alt="Google Apps Script Editor" />
+</p>
+
+4. Click the clock icon on the left toolbar (**Triggers**) > **Add Trigger** (*"Aggiungi trigger"*):
+   - **Function to run**: `gestisciInvioForm`
+   - **Event source**: `From spreadsheet` (*"Da foglio di lavoro"*)
+   - **Event type**: `On form submit` (*"All'invio del modulo"*)
+   - Click **Save** and accept permissions.
+
+<p align="center">
+  <img src="docs/screenshots/google_apps_script_trigger.png" width="650" alt="Google Apps Script Trigger Configuration" />
+</p>
+
 5. Make your Sheet accessible via CSV link:
    - Click **Share** > Set General Access to **"Anyone with the link can view"**.
    - Note down your **Sheet ID** (from the URL `https://docs.google.com/spreadsheets/d/<SHEET_ID>/edit`) and **GID** (usually `0` or found in the URL `#gid=...`).
@@ -134,10 +151,16 @@ function gestisciInvioForm(e) {
 ### 3️⃣ Android App Setup
 1. Install [`Portal.apk`](file:///C:/Users/ggd3v/Desktop/GitHub%20Portal/unity-android-nfc-skylanders-bridge/UnityProject/Portal.apk) on your NFC-enabled Android phone (or build the project from `UnityProject/` in Unity).
 2. Open the app and enter your:
-   - **Form URL** (ending in `/formResponse`)
-   - **Entry ID** (e.g., `entry.123456789`)
-3. Tap **Save** (saved in `PlayerPrefs` permanently).
-4. Tap **AVVIA LETTURA (Start Reading)**.
+   - **Send Url**: Your Form URL (ending in `/formResponse`)
+   - **Send Eid**: Your Entry ID (e.g., `entry.123456789`)
+3. Tap **Send Url** and **Send Eid** (saved in `PlayerPrefs` permanently).
+4. Tap **Start** to begin NFC scanning.
+
+<p align="center">
+  <img src="docs/screenshots/app_ui_start.png" width="260" alt="Android App UI Start" />
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="docs/screenshots/app_ui_stop.png" width="260" alt="Android App UI Active" />
+</p>
 
 ---
 
