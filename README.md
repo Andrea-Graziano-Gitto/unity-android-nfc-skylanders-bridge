@@ -6,7 +6,7 @@
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python)](https://python.org/)
 [![Dolphin](https://img.shields.io/badge/Dolphin-Emulator-red)](https://dolphin-emu.org/)
 
-Turn your **NFC-enabled Android smartphone** into a real-time **Virtual Traptanium / Power Portal** for **Dolphin Emulator (PC)**. Scan physical Skylanders figures with your phone to instantly spawn them in-game with zero lag and zero network setup headaches.
+Turn your **NFC-enabled Android smartphone** into a real-time **Virtual Traptanium / Power Portal** for **Dolphin Emulator (PC)**. Scan physical Skylanders figures or generic NFC tags/stickers/cards with your phone to instantly spawn them in-game with zero lag and zero network setup headaches.
 
 ---
 
@@ -20,12 +20,20 @@ Turn your **NFC-enabled Android smartphone** into a real-time **Virtual Traptani
 
 <p align="center">
   <a href="https://youtu.be/l0NzKal-fXI" target="_blank">
+    <img src="https://img.youtube.com/vi/l0NzKal-fXI/maxresdefault.jpg" width="0" height="0" />
     <img src="https://img.shields.io/badge/YouTube-Watch%20Demo%20Video-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Watch Demo Video on YouTube" />
   </a>
 </p>
 
-### 🎮 Why this project?
-Original USB Skylanders portals can be expensive, hard to find, or tricky to configure with emulators. This project bridges physical NFC hardware with Dolphin on PC by using your smartphone as the physical scanner and an ultra-lightweight, zero-config cloud queue.
+> ℹ️ **Video Context**: The demonstration shows the PC workflow in real-time. With the phone acting as the physical portal running the Unity app, tapping and removing an NFC tag immediately triggers `lettore.py` to hot-load and clear the character in Dolphin with sub-second response times.
+
+---
+
+### 🎮 Why this project & How it Handles Saves
+
+- **Universal NFC Support (Figures, Cards, Stickers, Coins)**: You don't necessarily need original figures — any physical tag with a unique NFC UID (NTAG213/215/216, Mifare, Skylander chips) functions as a physical "key".
+- **Decoupled Save Management (`.sky` files)**: The NFC tag is only used as a unique identifier. All character progression, level ups, stats, and gold are natively saved and managed by Dolphin inside the corresponding `.sky` dump file on your PC.
+- **Zero Cost & No Physical Portal Required**: Replaces expensive and bulky USB portals with hardware you already own.
 
 ---
 
@@ -33,12 +41,12 @@ Original USB Skylanders portals can be expensive, hard to find, or tricky to con
 
 ```mermaid
 flowchart LR
-    A[📱 Physical NFC Figure] -->|Tap Phone| B[📱 Unity Android App<br><i>NFCReader.cs</i>]
+    A[📱 NFC Tag / Figure / Card] -->|Tap on Phone Portal| B[📱 Unity Android App<br><i>NFCReader.cs</i>]
     B -->|HTTP POST Request| C[☁️ Google Form<br><i>/formResponse</i>]
     C -->|Auto Triggers Apps Script| D[📊 Google Sheet<br><i>Single-row FIFO buffer</i>]
     D -->|0.5s HTTP Polling| E[💻 Python Bridge<br><i>lettore.py</i>]
-    E -->|Lookup Serial in JSON| F[📂 mappatura_skylander.json]
-    F -->|GUI Automation Macro| G[🕹️ Dolphin Emulator<br><i>Skylander Manager</i>]
+    E -->|Lookup UID in JSON| F[📂 mappatura_skylander.json]
+    F -->|Hot-load .sky Dump| G[🕹️ Dolphin Emulator<br><i>Skylander Manager</i>]
 ```
 
 ### 💡 The "Zero-Config Cloud Broker" Design Decision
