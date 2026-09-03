@@ -1,12 +1,15 @@
-# 🌀 Unity-Android NFC Skylanders Bridge
+# 🌀 Unity Android Native NFC Reader & Virtual Skylanders Portal Bridge
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20Windows-blue)](https://github.com)
 [![Unity](https://img.shields.io/badge/Unity-2022.3%2B-black?logo=unity)](https://unity.com/)
+[![Android NFC](https://img.shields.io/badge/Android%20NFC-Native%20API%20(No%20Plugins)-green?logo=android)](https://developer.android.com/guide/topics/connectivity/nfc)
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python)](https://python.org/)
 [![Dolphin](https://img.shields.io/badge/Dolphin-Emulator-red)](https://dolphin-emu.org/)
+[![GitHub stars](https://img.shields.io/github/stars/Andrea-Graziano-Gitto/unity-android-nfc-skylanders-bridge?style=social)](https://github.com/Andrea-Graziano-Gitto/unity-android-nfc-skylanders-bridge)
 
-Turn your **NFC-enabled Android smartphone** into a real-time **Virtual Traptanium / Power Portal** for **Dolphin Emulator (PC)**. Scan physical Skylanders figures or generic NFC tags/stickers/cards with your phone to instantly spawn them in-game with zero lag and zero network setup headaches.
+> 🚀 **The first 100% Free & Open-Source Native Android NFC Reader for Unity with Continuous Physical Presence Detection** — no paid Asset Store plugins, no third-party native libraries required. Includes a complete real-time IoT Toys-to-Life virtual portal bridge for **Dolphin Emulator (PC)**.
+
+Turn your **NFC-enabled Android smartphone** into a real-time **Virtual Traptanium / Power Portal** for **Dolphin Emulator (PC)**. Scan physical Skylanders figures, cards, coins, stickers, or any generic NFC tags (NTAG213/215/216, Mifare, IsoDep, NfcA) with your phone to instantly spawn and despawn them in-game with zero lag and zero network setup headaches.
 
 ---
 
@@ -31,8 +34,9 @@ Turn your **NFC-enabled Android smartphone** into a real-time **Virtual Traptani
 
 ### 🎮 Why this project & How it Handles Saves
 
-- **Real-Time Continuous Presence Detection**: The app doesn't just read once on tap; it continuously checks tag presence. Place the figure on the phone $\rightarrow$ character spawns. Lift it off $\rightarrow$ character leaves the game.
-- **Universal NFC Support (Figures, Cards, Stickers, Coins)**: You don't necessarily need original figures — any physical tag with a unique NFC UID (NTAG213/215/216, Mifare, Skylander chips) functions as a physical "key".
+- **Pure C# Native Android NFC Integration**: A zero-dependency, open-source C# script utilizing Android's JNI (`AndroidJavaObject` / `AndroidJavaClass`) to interact directly with Android's `NfcAdapter` and `ForegroundDispatch`. Works seamlessly out of the box without requiring paid Asset Store plugins.
+- **Real-Time Continuous Presence Detection**: The app doesn't just read once on tap; it continuously checks physical tag presence. Place the figure on the phone $\rightarrow$ character spawns. Lift it off $\rightarrow$ character leaves the game.
+- **Universal NFC Support (Figures, Cards, Stickers, Coins)**: You don't necessarily need original figures — any physical tag with a unique NFC UID (NTAG213/215/216, Mifare Classic/Ultralight, IsoDep, NfcA, NfcB, NfcF, NfcV, Ndef) functions as a physical "key".
 - **Decoupled Save Management (`.sky` files)**: The NFC tag is only used as a unique identifier. All character progression, level ups, stats, and gold are natively saved and managed by Dolphin inside the corresponding `.sky` dump file on your PC.
 - **Zero Cost & No Physical Portal Required**: Replaces expensive and bulky USB portals with hardware you already own.
 
@@ -67,6 +71,106 @@ Why route through Google Forms/Sheets instead of a local HTTP/WebSocket server?
 | Google Apps Script Editor | Trigger Configuration (On Form Submit) |
 | :---: | :---: |
 | <img src="docs/screenshots/google_apps_script_editor.png" width="380" /> | <img src="docs/screenshots/google_apps_script_trigger.png" width="380" /> |
+
+---
+
+## 🧠 Deep Dive: Advanced NFC Hardware Polling & Temporal Filtering (Unity C#)
+
+Rather than treating NFC as a simple "on-tap" trigger, [`NFCReader.cs`](file:///C:/Users/ggd3v/Desktop/GitHub%20Portal/unity-android-nfc-skylanders-bridge/UnityProject/Assets/NFCReader.cs) implements a robust dual-stage hardware bridge that emulates the continuous physical presence of a *Portal of Power*:
+
+```mermaid
+flowchart TD
+    subgraph Discovery ["1. Initial Hardware Discovery"]
+        A[Android Intent ForegroundDispatch] --> B[Extract Tag UID]
+        B --> C[FindWorkingTechnology: NfcA, IsoDep, Mifare...]
+        C --> D[Sanitize Intent: activity.setIntent]
+    end
+
+    subgraph Verification ["2. Continuous Transponder Ping (0.1s Tick)"]
+        E[currentTech.Call 'connect'] -->|Success| F[Record '1' bit in Temporal Buffer]
+        E -->|Socket Exception / Fail| G[Record '0' bit in Temporal Buffer]
+        F --> H[currentTech.Call 'close']
+    end
+
+    subgraph Decision ["3. Temporal Window Decision (N=10 Samples)"]
+        I[Evaluate Bitmask: e.g. '0000011111']
+        I -->|Any '1' Present - Temporal OR| J[Authoritative State: Tag Present -> Send UID]
+        I -->|All '0's - '0000000000'| K[Authoritative State: Tag Removed -> Send 'Nessuno']
+    end
+
+    Discovery --> Verification --> Decision
+```
+
+### 🔬 1. Physical Transponder Ping vs Cached OS State
+Most mobile apps simply ask Android *"Do you still remember this tag?"*. In contrast, `NFCReader.cs` actively handshakes with the transponder's RF field:
+```csharp
+bool alreadyConnected = currentTech.Call<bool>("isConnected");
+if (!alreadyConnected) {
+    currentTech.Call("connect");
+}
+bool connected = currentTech.Call<bool>("isConnected");
+if (connected) {
+    currentTech.Call("close"); // Release RF field for next sample
+    return true;
+}
+```
+If the figure is lifted even a few millimeters off the phone's coil, `connect()` throws an exception, drops the connection, and sets `currentTag = null`.
+
+### ⏱️ 2. Temporal Window Sampling & Debounce Filter
+To eliminate micro-stutters and radio-frequency noise from false-clearing the portal in-game, reads are aggregated into a temporal bitmask window ($N = 10$ samples at $\Delta t = 0.1\text{s}$):
+$$\text{Window Duration} = 10 \times 0.1\text{s} = 1.0\text{s}$$
+
+```text
+Time (s):    0.0 ──── 0.2 ──── 0.4 ──── 0.6 ──── 0.8 ──── 1.0s
+Samples:     [ 0 , 0 , 0 , 0 , 0 , 1 , 1 , 1 , 1 , 1 ]  -> Valid Presence (Spawns Character)
+Samples:     [ 1 , 1 , 0 , 1 , 1 , 1 , 1 , 0 , 1 , 1 ]  -> RF Noise Handled (No In-Game Flicker)
+Samples:     [ 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ]  -> True Absence (Despawns Character)
+```
+- **Temporal OR Logic**: A strict zero check (`tuttiZero == true`) acts as a noise-resistant temporal OR filter. Single-packet RF dropouts do not cause annoying in-game character despawns.
+- **Batched Cloud Updates**: HTTP requests are only dispatched at the end of each $1.0\text{s}$ cycle when an authoritative state change is confirmed.
+
+### 🛡️ 3. Intent Sanitization & Android Lifecycle
+When a new tag arrives via `ForegroundDispatch`, the script binds the active `AndroidJavaObject` and immediately wipes the native Activity's intent:
+```csharp
+AndroidJavaObject newIntent = new AndroidJavaObject("android.content.Intent", activity, activity.Call<AndroidJavaObject>("getClass"));
+activity.Call("setIntent", newIntent);
+```
+This prevents Android from replaying stale cached intents when returning to focus or after system pauses.
+
+### 🌐 4. Asynchronous Cloud Dispatcher & UI Scaling
+- **[`GoogleFormSender.cs`](file:///C:/Users/ggd3v/Desktop/GitHub%20Portal/unity-android-nfc-skylanders-bridge/UnityProject/Assets/GoogleFormSender.cs)**: Employs Unity coroutines (`UnityWebRequest.Post`) for non-blocking HTTP submissions, persisting endpoint credentials across sessions via `PlayerPrefs`.
+- **[`Scaler.cs`](file:///C:/Users/ggd3v/Desktop/GitHub%20Portal/unity-android-nfc-skylanders-bridge/UnityProject/Assets/Scaler.cs)**: Dynamically recalculates canvas bounding rects and aspect-ratio scaling (`FitWidth`, `FitHeight`, `Cover`) across diverse Android screen densities and notches.
+
+---
+
+## 📱 How to Use `NFCReader.cs` in Any Unity Project (Standalone)
+
+Looking for a **free, open-source C# Native Android NFC solution** for your own Unity game, board game, Amiibo reader, museum kiosk, or IoT project? You don't need any paid Asset Store plugins!
+
+### 1. Copy the Core Files to your Unity Project:
+- [`Assets/NFCReader.cs`](file:///C:/Users/ggd3v/Desktop/GitHub%20Portal/unity-android-nfc-skylanders-bridge/UnityProject/Assets/NFCReader.cs) $\rightarrow$ Your `Assets/Scripts/`
+- [`Assets/Plugins/Android/AndroidManifest.xml`](file:///C:/Users/ggd3v/Desktop/GitHub%20Portal/unity-android-nfc-skylanders-bridge/UnityProject/Assets/Plugins/Android/AndroidManifest.xml) $\rightarrow$ Your `Assets/Plugins/Android/`
+- [`Assets/Android.androidlib/`](file:///C:/Users/ggd3v/Desktop/GitHub%20Portal/unity-android-nfc-skylanders-bridge/UnityProject/Assets/Android.androidlib) $\rightarrow$ Your `Assets/`
+
+### 2. Supported NFC Technologies:
+`NFCReader.cs` automatically handles all major ISO/IEC transponder protocols out of the box:
+- `android.nfc.tech.NfcA` (NTAG213, NTAG215, NTAG216, MIFARE Ultralight)
+- `android.nfc.tech.MifareClassic` & `MifareUltralight`
+- `android.nfc.tech.IsoDep` (Desfire, SmartCards, Banking cards)
+- `android.nfc.tech.Ndef` & `NdefFormatable`
+- `android.nfc.tech.NfcB`, `NfcF` (FeliCa), `NfcV` (Vicinity / ISO 15693)
+
+### 3. Quick Integration:
+```csharp
+// In your custom script:
+public NFCReader nfcReader;
+
+void OnEnable() {
+    nfcReader.StartReading();
+}
+
+// Read current tag UID string: e.g. "04:75:7D:B2:58:1C:90" or "Nessuno"
+```
 
 ---
 
@@ -235,6 +339,14 @@ function gestisciInvioForm(e) {
 ## 🤝 Contributing
 
 Pull requests and issues are welcome! Feel free to fork the repository, suggest enhancements, or report bugs.
+
+---
+
+## 👨‍💻 Author & Credits
+
+Developed with ❤️ by **Andrea Graziano Gitto**  
+- GitHub: [@Andrea-Graziano-Gitto](https://github.com/Andrea-Graziano-Gitto)
+- Project: [unity-android-nfc-skylanders-bridge](https://github.com/Andrea-Graziano-Gitto/unity-android-nfc-skylanders-bridge)
 
 ---
 
