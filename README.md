@@ -1,6 +1,7 @@
 # 🌀 Unity Android Native NFC Reader & Virtual Skylanders Portal Bridge
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Download APK](https://img.shields.io/badge/Download-Portal.apk%20(Release)-success?logo=android&logoColor=white)](https://github.com/Andrea-Graziano-Gitto/unity-android-nfc-skylanders-bridge/releases/tag/Apk)
 [![Unity](https://img.shields.io/badge/Unity-2022.3%2B-black?logo=unity)](https://unity.com/)
 [![Android NFC](https://img.shields.io/badge/Android%20NFC-Native%20API%20(No%20Plugins)-green?logo=android)](https://developer.android.com/guide/topics/connectivity/nfc)
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python)](https://python.org/)
@@ -271,7 +272,7 @@ function gestisciInvioForm(e) {
 ---
 
 ### 3️⃣ Android App Setup
-1. Install [`Portal.apk`](file:///C:/Users/ggd3v/Desktop/GitHub%20Portal/unity-android-nfc-skylanders-bridge/UnityProject/Portal.apk) on your NFC-enabled Android phone (or build the project from `UnityProject/` in Unity).
+1. **Download & Install APK**: Download [**Portal.apk from GitHub Releases**](https://github.com/Andrea-Graziano-Gitto/unity-android-nfc-skylanders-bridge/releases/tag/Apk) and install it on your NFC-enabled Android device (or build the project from `UnityProject/` in Unity).
 2. Open the app and enter your:
    - **Send Url**: Your Form URL (ending in `/formResponse`)
    - **Send Eid**: Your Entry ID (e.g., `entry.123456789`)
