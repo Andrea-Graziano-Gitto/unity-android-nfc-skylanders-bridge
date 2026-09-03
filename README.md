@@ -10,10 +10,19 @@ Turn your **NFC-enabled Android smartphone** into a real-time **Virtual Traptani
 
 ---
 
-## 🌟 Showcase & Overview
+## 🌟 Showcase & Video Demo
 
-![Demo GIF](docs/screenshots/demo.gif)
-*(Placeholder: add your gameplay demonstration GIF here)*
+<p align="center">
+  <a href="https://youtu.be/l0NzKal-fXI" target="_blank">
+    <img src="https://img.youtube.com/vi/l0NzKal-fXI/maxresdefault.jpg" alt="Unity-Android NFC Skylanders Bridge - Dolphin Demo" width="720" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://youtu.be/l0NzKal-fXI" target="_blank">
+    <img src="https://img.shields.io/badge/YouTube-Watch%20Demo%20Video-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Watch Demo Video on YouTube" />
+  </a>
+</p>
 
 ### 🎮 Why this project?
 Original USB Skylanders portals can be expensive, hard to find, or tricky to configure with emulators. This project bridges physical NFC hardware with Dolphin on PC by using your smartphone as the physical scanner and an ultra-lightweight, zero-config cloud queue.
