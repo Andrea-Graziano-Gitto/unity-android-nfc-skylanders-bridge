@@ -25,12 +25,13 @@ Turn your **NFC-enabled Android smartphone** into a real-time **Virtual Traptani
   </a>
 </p>
 
-> ℹ️ **Video Context**: The demonstration shows the PC workflow in real-time. With the phone acting as the physical portal running the Unity app, tapping and removing an NFC tag immediately triggers `lettore.py` to hot-load and clear the character in Dolphin with sub-second response times.
+> ℹ️ **Video Context & Presence Detection**: The demonstration shows the PC workflow in real-time. Just like a real physical portal, **the NFC tag/figure must physically remain resting on the back of the phone to stay active in-game**. When you lift/remove the tag from the phone, the Android app detects its absence in real-time and immediately instructs Dolphin to clear the portal slot!
 
 ---
 
 ### 🎮 Why this project & How it Handles Saves
 
+- **Real-Time Continuous Presence Detection**: The app doesn't just read once on tap; it continuously checks tag presence. Place the figure on the phone $\rightarrow$ character spawns. Lift it off $\rightarrow$ character leaves the game.
 - **Universal NFC Support (Figures, Cards, Stickers, Coins)**: You don't necessarily need original figures — any physical tag with a unique NFC UID (NTAG213/215/216, Mifare, Skylander chips) functions as a physical "key".
 - **Decoupled Save Management (`.sky` files)**: The NFC tag is only used as a unique identifier. All character progression, level ups, stats, and gold are natively saved and managed by Dolphin inside the corresponding `.sky` dump file on your PC.
 - **Zero Cost & No Physical Portal Required**: Replaces expensive and bulky USB portals with hardware you already own.
@@ -41,12 +42,12 @@ Turn your **NFC-enabled Android smartphone** into a real-time **Virtual Traptani
 
 ```mermaid
 flowchart LR
-    A[📱 NFC Tag / Figure / Card] -->|Tap on Phone Portal| B[📱 Unity Android App<br><i>NFCReader.cs</i>]
+    A[📱 NFC Tag / Figure / Card<br><i>Must rest on phone</i>] -->|Continuous Presence Check| B[📱 Unity Android App<br><i>NFCReader.cs</i>]
     B -->|HTTP POST Request| C[☁️ Google Form<br><i>/formResponse</i>]
     C -->|Auto Triggers Apps Script| D[📊 Google Sheet<br><i>Single-row FIFO buffer</i>]
     D -->|0.5s HTTP Polling| E[💻 Python Bridge<br><i>lettore.py</i>]
     E -->|Lookup UID in JSON| F[📂 mappatura_skylander.json]
-    F -->|Hot-load .sky Dump| G[🕹️ Dolphin Emulator<br><i>Skylander Manager</i>]
+    F -->|Hot-load or Clear .sky| G[🕹️ Dolphin Emulator<br><i>Skylander Manager</i>]
 ```
 
 ### 💡 The "Zero-Config Cloud Broker" Design Decision
