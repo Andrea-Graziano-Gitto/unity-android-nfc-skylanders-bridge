@@ -1,3 +1,17 @@
+> ⚠️ **PROGETTO AGGIORNATO / NUOVA VERSIONE DISPONIBILE**
+> 
+> È disponibile la nuova versione del progetto: [**Skylanders Hub (unity-android-nfc-skylanders-bridge-pythonhook-dolphin)**](https://github.com/Andrea-Graziano-Gitto/unity-android-nfc-skylanders-bridge-pythonhook-dolphin).
+> 
+> ### 🚀 Cosa è cambiato rispetto a questa versione:
+> - **Comunicazione LAN diretta (TCP + Auto-Discovery UDP)**: Eliminata la dipendenza da Google Forms e Google Sheets; la trasmissione dati telefono $\rightarrow$ PC avviene in rete locale in tempo reale senza latenza cloud.
+> - **Hook TCP integrato in Dolphin**: Non viene più utilizzata l'automazione GUI/simulate-clicks (`pyautogui`); Dolphin è stato modificato ed integra ora un server TCP interno nativo per caricare e rimuovere i file `.sky` nei vari slot.
+> - **Supporto Multiplayer (2 Giocatori)**: Possibilità di collegare 2 smartphone contemporaneamente (Slot 0 e Slot 1).
+> - **Generazione Automatica File `.sky` & Algoritmo Mifare Key A**: Generazione automatica dei file salvataggio a partire dall'ID del personaggio e calcolo nativo delle chiavi CRC48 per la scrittura dei tag.
+> - **Interfaccia Web di Monitoraggio**: Nuova Web App locale (Flask su porta 8080) per monitorare lo stato del portale e delle connessioni dal browser.
+
+---
+
+
 # 🌀 Unity Android Native NFC Reader & Virtual Skylanders Portal Bridge
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
